@@ -1,0 +1,49 @@
+features <- read.csv("E:\\Coursera cleaning\\UCI HAR Dataset\\features.txt", header = FALSE, sep = " ")
+
+data.train.x <- read.table("E:\\Coursera cleaning\\UCI HAR Dataset\\train\\X_train.txt")
+data.train.activity <- read.csv("E:\\Coursera cleaning\\UCI HAR Dataset\\train\\y_train.txt", header = FALSE, sep = " ")
+data.train.subject <- read.csv("E:\\Coursera cleaning\\UCI HAR Dataset\\train\\subject_train.txt",header = FALSE, sep = " ")
+
+data.train <-  data.frame(data.train.subject, data.train.activity, data.train.x)
+
+
+data.test.x <- read.table("E:\\Coursera cleaning\\UCI HAR Dataset\\test\\X_test.txt")
+data.test.activity <- read.csv("E:\\Coursera cleaning\\UCI HAR Dataset\\test\\y_test.txt", header = FALSE, sep = ' ')
+data.test.subject <- read.csv("E:\\Coursera cleaning\\UCI HAR Dataset\\test\\subject_test.txt", header = FALSE, sep = ' ')
+
+data.test <-  data.frame(data.test.subject, data.test.activity, data.test.x)
+
+data.all <- rbind(data.train, data.test)
+
+mean_std.select <- grep('mean|std', features)
+
+sub_data <- data.all[,c(1,2,mean_std.select + 2)]
+
+activity.labels <- read.table('./UCI HAR Dataset/activity_labels.txt', header = FALSE)
+activity.labels <- as.character(activity.labels[,2])
+sub_data$activity <- activity.labels[sub_data$activity]
+
+newnames <- names(sub_data)
+
+newnames <- gsub("[(][)]", "", newnames)
+
+newnames <- gsub("^t", "TimeDomain_", newnames)
+
+newnames <- gsub("^f", "FrequencyDomain_", newnames)
+
+newnames <- gsub("Acc", "Accelerometer", newnames)
+
+newnames <- gsub("Gyro", "Gyroscope", newnames)
+
+newnames <- gsub("Mag", "Magnitude", newnames)
+
+newnames <- gsub("-mean-", "_Mean_", newnames)
+
+newnames <- gsub("-std-", "_StandardDeviation_", newnames)
+
+newnames <- gsub("-", "_", newnames)
+
+names(sub_data) <- newnames
+
+tidy_data <- aggregate(sub_data[,3:81], by = list(activity = sub_data$activity, subject = sub_data$subject),FUN = mean)
+write.table(x = tidy_data, file = "data_tidy.txt", row.names = FALSE)
